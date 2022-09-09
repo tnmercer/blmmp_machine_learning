@@ -3,7 +3,7 @@ import pandas as pd
 import pandas_datareader as pdr
 from pathlib import Path
 
-from _config import *
+from config import *
 
 
 
@@ -11,7 +11,7 @@ from _config import *
 # global variables
 # ==================================================================================================
 
-''' moved to _config.py
+''' moved to config.py
 DEBUG = True
 '''
 
@@ -110,6 +110,7 @@ def save_data(df, dir='data', filename='file.csv'):
 
 # --------------------------------------------------------------------------------------------------
 def load_data(ticker, set_index=False, index_column=''):
+	
 	"""load_data() TODO: a summary of what this function does 
 	
 	TODO: add a detailed description if necessary
