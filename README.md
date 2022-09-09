@@ -14,6 +14,13 @@ Compare against alternate machine learning models.
 * Equally over time 
 * When machine learning predicts
 
+
+## Installations
+
+[pandas_datareader](https://pypi.org/project/pandas-datareader/)
+
+``` pip install pandas-datareader ```
+
 ## Requirements
 
 *Software Version Control (github) 10 points*
