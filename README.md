@@ -8,6 +8,12 @@ Create and run machine learning model on portfolios to predict future outcomes.
 
 Compare against alternate machine learning models. 
 
+## When to buy in
+
+* Beginning of period
+* Equally over time 
+* When machine learning predicts
+
 ## Requirements
 
 *Software Version Control (github) 10 points*
