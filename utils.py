@@ -67,7 +67,7 @@ def download_stock_data(
 	# 	# reset the index so 'Date' becomes a column again
 	# 	stock_df[ticker].reset_index(inplace=True)
 
-	stock = pdr.get_data_yahoo(ticker, start_date, end_date, ret_index=True)
+	stock = pdr.get_data_yahoo(ticker, start_date, end_date, ret_index=False)
 
 	if DEBUG:
 		print(f'download_data -- ticker: {ticker}')
