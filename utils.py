@@ -5,23 +5,18 @@ from pathlib import Path
 
 from config import *
 
-
-
-# ==================================================================================================
-# global variables
-# ==================================================================================================
-
-''' moved to config.py
-DEBUG = True
-'''
-
-
-
 # ==================================================================================================
 # core functions
 # ==================================================================================================
-def initialize_df(column_names, set_index=False, index_column=''):
 
+# --------------------------------------------------------------------------------------------------
+def debug_print(s):
+	if DEBUG:
+		print(s)
+        
+# --------------------------------------------------------------------------------------------------
+def initialize_df(column_names, set_index=False, index_column=''):
+	
 	df = pd.DataFrame(
 		columns=column_names
 	)
@@ -69,9 +64,8 @@ def download_stock_data(
 
 	stock = pdr.get_data_yahoo(ticker, start_date, end_date, ret_index=False)
 
-	if DEBUG:
-		print(f'download_data -- ticker: {ticker}')
-		print(stock.head(20))
+	debug_print(f'download_data -- ticker: {ticker}')
+	debug_print(stock.head(20))
 	
 	#  stock.to_csv(Path('data/'+ticker+'.csv'))
 
@@ -103,13 +97,13 @@ def save_data(df, dir='data', filename='file.csv'):
 	path = Path(dir+'/'+filename)
 	result = df.to_csv(path)
 
-	if DEBUG:
-		print(f'save_data ------ saving {path}')
+	debug_print(f'save_data ------ saving {path}')
 
 	return None
 
 # --------------------------------------------------------------------------------------------------
-def load_data(ticker, set_index=False, index_column=''):
+# def load_data(ticker, set_index=False, index_column=''):
+def load_data(ticker):
 	
 	"""load_data() TODO: a summary of what this function does 
 	
@@ -137,9 +131,8 @@ def load_data(ticker, set_index=False, index_column=''):
 	
 	# check for the existence of that file
 	if not path.is_file():
-		if DEBUG:
-			print(f'load_data ------ path {path} doesn\'t exist.')
-			print(f'load_data ------ initiating download for [{ticker}] now...')
+		debug_print(f'load_data ------ path {path} doesn\'t exist.')
+		debug_print(f'load_data ------ initiating download for [{ticker}] now...')
 		# since data for that file doesn't exist, let's download it
 		stock_data_to_save = download_stock_data(ticker)
 		# and then save it out to disk so we have it for next time
@@ -147,18 +140,50 @@ def load_data(ticker, set_index=False, index_column=''):
 
 	data_df = pd.read_csv(
 		path, 
-	#	index_col='Date', 
+		index_col='Date', 
 		parse_dates=True,
 		infer_datetime_format=True
 	)
-	if (set_index and index_column==''):
-		assert(f'load_data() -> index_column is blank, please provide the correct column name')
-	if (set_index):
-		data_df.set_index(index_column,inplace=True)
+	# if (set_index and index_column==''):
+	# 	assert(f'load_data() -> index_column is blank, please provide the correct column name')
+	# if (set_index):
+	# 	data_df.set_index(index_column,inplace=True)
 
-	if DEBUG:
-		print('---- symbol_df ----')
-		print(data_df.head())
-		print(data_df.tail())
+	debug_print('---- symbol_df ----')
+	debug_print(data_df.head())
+	debug_print(data_df.tail())
 
 	return data_df
+
+
+# --------------------------------------------------------------------------------------------------
+def create_portfolio():
+	
+	portfolio = pd.DataFrame()
+
+	for key in all_portfolios:
+		for key in key:
+			# Create dataframe from CSV file
+			df = pd.read_csv(f"./data/{key}.csv")
+
+			# Drop columns and set date index for concat
+			df = df[['Date','Close']].set_index('Date')
+
+			# Rename to Ticker
+			df = df.rename(columns={'Close':key})
+
+			# Concat to empty dataframe
+			all_funds_df = pd.concat([all_funds_df, df], axis=1)
+
+	# drop na values 
+	all_funds_df = all_funds_df.dropna()
+
+	debug_print(all_funds_df.head())
+	
+	# save to pkl file
+	dataframe = all_funds_df
+	output = open('data/all_funds_df.pkl', 'wb')
+	pickle.dump(dataframe, output)
+	output.close()
+	
+	return None
