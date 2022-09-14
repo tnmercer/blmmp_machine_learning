@@ -19,7 +19,25 @@ Compare against alternate machine learning models.
 
 [pandas_datareader](https://pypi.org/project/pandas-datareader/)
 
+
 ``` pip install pandas-datareader ```
+
+[kaleido](https://pypi.org/project/kaleido/) - for saving static chart images
+
+
+``` pip install -U kaleido ```
+
+## Outcomes
+
+#### Fidelity
+
+![image](./images/fidelity_index_focused_models_annual.png)
+
+
+![image](./images/fidelity_index_focused_models_monthly.png)
+
+![image](./images/fidelity_index_focused_models_ml_model_1.png)
+
 
 ## Requirements
 

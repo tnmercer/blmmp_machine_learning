@@ -1,8 +1,13 @@
 import datetime as dt
 import pandas as pd
 import pandas_datareader as pdr
+from pandas.tseries.offsets import BDay
+from datetime import date
 from pathlib import Path
 import pickle
+import plotly.graph_objects as go
+import numpy as np
+
 
 from config import *
 
@@ -194,6 +199,48 @@ def create_portfolio():
 	
 	return None
 
+# --------------------------------------------------------------------------------------------------
+
+def portfolio_return(selected_portfolio_weights):
+    portfolio_returns = pd.DataFrame()
+
+    for key in selected_portfolio_weights.keys():
+        # Create dataframe from CSV file
+        df = pd.read_csv(f"./data/{key}.csv")
+
+        # Drop columns and set date index for concat
+        df = df[['Date','Close']].set_index('Date')
+        df.index = pd.to_datetime(df.index)
+
+        # Rename columns to Ticker
+        df = df.rename(columns={'Close':key})
+
+        # Change Close to return
+        df = df.pct_change()
+
+        # Concat to empty dataframe
+        portfolio_returns = pd.concat([portfolio_returns, df], axis=1)
+
+    # drop na values 
+    portfolio_returns = portfolio_returns.dropna()
+    
+    return portfolio_returns
+
+# --------------------------------------------------------------------------------------------------
+
+def credit_holding_acct(holding_account, ira_contribution_limit):
+    
+	holding_account = ira_contribution_limit + holding_account
+
+	return holding_account
+
+# --------------------------------------------------------------------------------------------------
+
+def debit_holding_acct(holding_account, trans_amt):
+    
+	holding_account = holding_account - trans_amt
+
+	return holding_account
 
 # --------------------------------------------------------------------------------------------------
 def save_pickle(df, path):
@@ -215,5 +262,13 @@ def load_pickle(path):
 	pkl_file = open(Path(path), 'rb')
 	dataframe = pickle.load(pkl_file)
 	pkl_file.close()
+        
+	return name
+
+# --------------------------------------------------------------------------------------------------
+
+def save_image(fig, path):
 	
-	return dataframe
+	fig.write_image(path)
+
+	return None
