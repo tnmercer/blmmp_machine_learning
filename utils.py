@@ -2,6 +2,7 @@ import datetime as dt
 import pandas as pd
 import pandas_datareader as pdr
 from pathlib import Path
+import pickle
 
 from config import *
 
@@ -12,10 +13,13 @@ from config import *
 # --------------------------------------------------------------------------------------------------
 def debug_print(s):
 	if DEBUG:
-		print(s)
-        
+		ret = print(s)
+	return ret
+
 # --------------------------------------------------------------------------------------------------
 def initialize_df(column_names, set_index=False, index_column=''):
+	
+	debug_print('---- initialize_df()')
 	
 	df = pd.DataFrame(
 		columns=column_names
@@ -24,8 +28,9 @@ def initialize_df(column_names, set_index=False, index_column=''):
 		assert(f'load_data() -> index_column is blank, please provide the correct column name')
 	if (set_index):
 		df.set_index(index_column,inplace=True)
-
+	
 	return df
+
 
 # --------------------------------------------------------------------------------------------------
 def download_stock_data(
@@ -54,22 +59,16 @@ def download_stock_data(
 	TODO: specify the return value
 	"""
 
-	# stock_tickers = ['SPY','QQQ','AAPL','AMZN','GOOG','META','MSFT']
-	# stock_df = {}
-	# for ticker in stock_tickers :
-	# 	# download the stock data for this ticker
-	# 	stock_df[ticker] = pdr.get_data_yahoo(ticker, start_date, end_date, ret_index=True)
-	# 	# reset the index so 'Date' becomes a column again
-	# 	stock_df[ticker].reset_index(inplace=True)
-
+	
+	debug_print('---- download_stock_data()')
+	
 	stock = pdr.get_data_yahoo(ticker, start_date, end_date, ret_index=False)
-
+	
 	debug_print(f'download_data -- ticker: {ticker}')
 	debug_print(stock.head(20))
 	
-	#  stock.to_csv(Path('data/'+ticker+'.csv'))
-
 	return stock
+
 
 # --------------------------------------------------------------------------------------------------
 def save_data(df, dir='data', filename='file.csv'):
@@ -93,13 +92,16 @@ def save_data(df, dir='data', filename='file.csv'):
 	-------
 	TODO: specify the return value
 	"""
-
+	
+	debug_print('---- save_data()')
+	
 	path = Path(dir+'/'+filename)
 	result = df.to_csv(path)
-
+	
 	debug_print(f'save_data ------ saving {path}')
-
+	
 	return None
+
 
 # --------------------------------------------------------------------------------------------------
 # def load_data(ticker, set_index=False, index_column=''):
@@ -125,7 +127,9 @@ def load_data(ticker):
 	-------
 	TODO: specify the return value
 	"""
-
+	
+	debug_print('---- load_data()')
+	
 	# generate a path for the ticker data we want to load
 	path = Path('data/'+ticker+'.csv')
 	
@@ -159,25 +163,27 @@ def load_data(ticker):
 # --------------------------------------------------------------------------------------------------
 def create_portfolio():
 	
+	debug_print('---- create_portfolio()')
+	
 	portfolio = pd.DataFrame()
-
+	
 	for key in all_portfolios:
 		for key in key:
 			# Create dataframe from CSV file
 			df = pd.read_csv(f"./data/{key}.csv")
-
+			
 			# Drop columns and set date index for concat
 			df = df[['Date','Close']].set_index('Date')
-
+			
 			# Rename to Ticker
 			df = df.rename(columns={'Close':key})
-
+			
 			# Concat to empty dataframe
 			all_funds_df = pd.concat([all_funds_df, df], axis=1)
-
+	
 	# drop na values 
 	all_funds_df = all_funds_df.dropna()
-
+	
 	debug_print(all_funds_df.head())
 	
 	# save to pkl file
@@ -188,18 +194,26 @@ def create_portfolio():
 	
 	return None
 
-def save_pickle(df, path):
 
+# --------------------------------------------------------------------------------------------------
+def save_pickle(df, path):
+	
+	debug_print('---- save_pickle()')
+	
 	output = open(path, 'wb')
-	pickle.dump(dataframe, output)
+	pickle.dump(df, output)
 	output.close()
-    
-    return None
-    
+	
+	return None
+
+
+# --------------------------------------------------------------------------------------------------
 def load_pickle(path):
-    
-    pkl_file = open(Path(path), 'rb')
-    dataframe = pickle.load(pkl_file)
-    pkl_file.close()
-    
-    return dataframe
+	
+	debug_print('---- load_pickle()')
+	
+	pkl_file = open(Path(path), 'rb')
+	dataframe = pickle.load(pkl_file)
+	pkl_file.close()
+	
+	return dataframe
