@@ -187,3 +187,19 @@ def create_portfolio():
 	output.close()
 	
 	return None
+
+def save_pickle(df, path):
+
+	output = open(path, 'wb')
+	pickle.dump(dataframe, output)
+	output.close()
+    
+    return None
+    
+def load_pickle(path):
+    
+    pkl_file = open(Path(path), 'rb')
+    dataframe = pickle.load(pkl_file)
+    pkl_file.close()
+    
+    return dataframe
