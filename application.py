@@ -9,10 +9,56 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report
 from sklearn import svm
 
+
 from utils import *
+# from plot_function import *
+
+
+# ======================================================================================================================
+# Global Application Variables
+# ======================================================================================================================
+
+# ------------------------------------------------------------------------------
+portfolio_returns_pred_df_col_list = [
+	'Date',
+	'Close',
+	'Return',
+	'Months_To_Invest',
+]
+
+global portfolio_returns_pred_df
+portfolio_returns_pred_df = None
+portfolio_returns_pred_df = pd.DataFrame(columns=portfolio_returns_pred_df_col_list)
+
+# ------------------------------------------------------------------------------
+predictions_to_plot_df_col_list = [
+	'Date',
+	'Current Target',
+	'Future Target',
+]
+
+global predictions_to_plot_df
+predictions_to_plot_df = None
+predictions_to_plot_df = pd.DataFrame(columns=predictions_to_plot_df_col_list)
+
+# ------------------------------------------------------------------------------
+monthly_predictions_col_list = [
+	'Date',
+	'Close',
+]
+
+global monthly_predictions_plot_list
+monthly_predictions_plot_list = []
 
 
 
+# ======================================================================================================================
+# Core Application Functions
+# ======================================================================================================================
+
+
+
+# ----------------------------------------------------------------------------------------------------------------------
 # this function loads the price data for a particular ticker
 # it returns a dataframe with a Datetime index columns, and 
 # Open, High, Low, Closed, and Volume columns
@@ -43,6 +89,7 @@ def load_csv(ticker):
 	return df
 
 
+# ----------------------------------------------------------------------------------------------------------------------
 def resample_dataframe(df):
 
 	df_to_resample = df.copy()
@@ -66,13 +113,20 @@ def resample_dataframe(df):
 	return resampled_df
 
 
+# ----------------------------------------------------------------------------------------------------------------------
 # this function prepares the stock data for machine learning
 # it generates 
 def prep_data_for_ML(df):
 	
+	debug_print('---- prep_data_for_ML()')
+
 	df['Current Return'] = df['Close'].pct_change()
 	df['Future Returns'] = df['Close'].pct_change().shift(-3)
 
+	df['Current Target']= 0.0
+	df.loc[(df['Current Return'] >= 0), 'Current Target'] = 1
+	df.loc[(df['Current Return'] < 0), 'Current Target'] = -1
+	
 	df['Future Target'] = 0.0
 	df.loc[(df['Future Returns'] >= 0), 'Future Target'] = 1
 	df.loc[(df['Future Returns'] < 0), 'Future Target'] = -1
@@ -82,6 +136,7 @@ def prep_data_for_ML(df):
 	return df
 
 
+# ----------------------------------------------------------------------------------------------------------------------
 def predict_future(monthly_df, current_date=pd.Timestamp('2020-01-31')):
 	
 	# TODO: moving this code into an initialization function
@@ -116,7 +171,7 @@ def predict_future(monthly_df, current_date=pd.Timestamp('2020-01-31')):
 	# monthly_df = prep_data_for_ML(prep_data_for_ML)
 
 	# creating our X (features) and y (prediction) dataframes
-	X = monthly_df.drop(columns=['Open','High', 'Low','Current Return','Future Returns','Future Target'])
+	X = monthly_df.drop(columns=['Open','High', 'Low','Current Return','Current Target','Future Returns','Future Target'])
 	y = monthly_df['Future Target']
 	
 	# creating our training and testing sub-sets
@@ -146,6 +201,7 @@ def predict_future(monthly_df, current_date=pd.Timestamp('2020-01-31')):
 	return y_future_prediction
 
 
+# ----------------------------------------------------------------------------------------------------------------------
 # TODO: we need to finish the implementation of this function
 # it should take the future prediction, and last_investment_date and
 # return the number of months to invest
@@ -162,38 +218,93 @@ def calculate_investment_from_prediction(y_future_prediction):
 		else:
 			break
 
-	# TODO: similar to the above, we need to calculate months since last investment
-	# then add that number to months_to_invest
-
 	return months_to_invest
 
 
+# ----------------------------------------------------------------------------------------------------------------------
 # TODO: save our future predictions so we can graph them later
-def save_monthly_predictions(current_date, close, current_return, y_future_prediction):
-
-	# create a datafrom to hold this months predictions
-	current_month_df = pd.DataFrame(columns=['Date','Close'])
-	current_month_df.set_index('Date')
-	current_month_df.index[0]=current_date
-	current_month_df.Close[0]=close
-	current_month_df.index[1]=current_date + DateOffset(1)
-	current_month_df.Close[1]=current_return * y_future_prediction[0] + close
-	current_month_df.index[2]=current_date + DateOffset(2)
-	current_month_df.Close[2]=current_return * y_future_prediction[1] + current_month_df.Close[1]
-	current_month_df.index[3]=current_date + DateOffset(3)
-	current_month_df.Close[3]=current_return * y_future_prediction[2] + current_month_df.Close[2]
+def save_monthly_predictions(current_date, current_close, current_return, current_target, y_future_prediction):
 	
-	# TODO: append current_month_df to a monthly_predictions_list
+	debug_print('---- save_monthly_predictions() ----')
+	
+	# ----------------------------------------------------------------------------------------------
+	# save the data Toni needs to calculate the portfolio returns
+	# ----------------------------------------------------------------------------------------------
+	
+	new_portfolio_return_df = pd.DataFrame(
+		columns=portfolio_returns_pred_df_col_list
+	)
+	new_portfolio_return_df['Date']    = current_date
+	new_portfolio_return_df['Close']   = current_close
+	new_portfolio_return_df['Return']  = current_return
+	new_portfolio_return_df['Months_To_Invest'] = calculate_investment_from_prediction(y_future_prediction)
+	
+	portfolio_returns_pred_df = pd.concat([portfolio_returns_pred_df, new_portfolio_return_df])
+	
+	debug_print('-- last 5 rows of data Toni needs')
+	debug_print(portfolio_returns_pred_df.tail(5))
+	
+	
+	# ----------------------------------------------------------------------------------------------
+	# save the predictions we need to plot
+	# ----------------------------------------------------------------------------------------------
+	
+	# columns = 'Date', 'Current Return', 'Future Returns',
+	
+	new_predictions_df = pd.DataFrame(
+		columns=predictions_to_plot_df_col_list
+	)
+	new_predictions_df['Date']           = current_date
+	new_predictions_df['Current Target'] = current_target
+	new_predictions_df['Future Target']  = y_future_prediction[0]
+	
+	predictions_to_plot_df = pd.concat([predictions_to_plot_df, new_predictions_df])
+	
+	debug_print('-- last 5 rows of data Dan needs')
+	debug_print(predictions_to_plot_df.tail(5))
+	
+	
+	# ----------------------------------------------------------------------------------------------
+	# TODO: a more complicated way to plot our predictions
+	# ----------------------------------------------------------------------------------------------
+	
+	# columns = 'Date', 'Close'
+	
+	monthly_predictions_col_list
+	
+	# create a datafrom to hold this months predictions
+	new_predictions_df = pd.DataFrame(columns=monthly_predictions_col_list)
+	
+	new_predictions_df.Date[0] =current_date
+	new_predictions_df.Close[0]=close
+	
+	new_predictions_df.Date[1] =current_date + DateOffset(1)
+	new_predictions_df.Close[1]=current_return * y_future_prediction[0] + close
+	
+	new_predictions_df.Date[2] =current_date + DateOffset(2)
+	new_predictions_df.Close[2]=current_return * y_future_prediction[1] + current_month_df.Close[1]
+	
+	new_predictions_df.Date[3] =current_date + DateOffset(3)
+	new_predictions_df.Close[3]=current_return * y_future_prediction[2] + current_month_df.Close[2]
+	
+	monthly_predictions_plot_list.append(new_predictions_df)
+	
+	# print the last 5 monthly predictions
+	# debug_print(monthly_predictions_plot_list[len(monthly_predictions_plot_list)-5:])
+	
 	
 	return None
 
 
-
-
+# ----------------------------------------------------------------------------------------------------------------------
 def main():
+	debug_print('---- prep_data_for_ML()')
+	
 	# load the VTI total market ETF and resample the daily data to monthly
 	total_market_df = resample_dataframe(load_csv('VTI'))
-	#
+	debug_print('loaded & resampled VTI.csv')
+	
+	# prep VTI for Machine Learning
 	total_market_df = prep_data_for_ML(total_market_df)
 
 	# save current_date (to remember where we are in time)
@@ -211,6 +322,9 @@ def main():
 		# skip the first 12 months
 		if current_date < total_market_df.index[12]:
 			continue
+		
+		if current_date > total_market_df.index[24]:
+			break
 
 		# get our future predictions
 		y_future_prediction = predict_future(total_market_df, current_date)
@@ -222,13 +336,19 @@ def main():
 			total_market_df[current_date]['Close'],
 			total_market_df[current_date]['Current Return'],
 			y_future_prediction)
-		
-		# calculate how many months we can invest
-		# NOTE: calculate_investment_from_prediction function is INCOMPLETE, see above
-		months_to_invest = calculate_investment_from_prediction(y_future_prediction)
 
-		# TODO @Toni we're waiting for you to create this function
-		# this function should...
-		# - update the portfolio returns each month
-		# - invest-and-rebalance at the same time if months_to_invest is positive
+		# FUTURE re-work Toni's code to update the portfolio on a monthly basis
 		# update_portfolio(current_date, this_months_return, months_to_invest)
+		#  this function should...
+		#   - update the portfolio returns each month
+		#   - invest-and-rebalance at the same time if months_to_invest is positive
+	
+	return None
+
+
+
+
+# ======================================================================================================================
+if __name__ == "__main__":
+   main()
+# ======================================================================================================================
