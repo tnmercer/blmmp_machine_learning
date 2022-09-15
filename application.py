@@ -555,13 +555,13 @@ def main():
 		global portfolio_returns_pred_df
 		debug_print('-- save [portfolio_returns_pred_df] to pickle -------------------------------------------------------')
 		debug_print(portfolio_returns_pred_df)
-		save_pickle(portfolio_returns_pred_df, './predictions/portfolio_' + prediction_filename)
+		save_pickle(portfolio_returns_pred_df, './resources/predictions/portfolio_' + prediction_filename)
 
 		# plot our predictions
 		global predictions_to_plot_df
 		debug_print('-- save [predictions_to_plot_df] to pickle ----------------------------------------------------------')
 		debug_print(predictions_to_plot_df)
-		save_pickle(predictions_to_plot_df, './predictions/plot_me_' + prediction_filename)
+		save_pickle(predictions_to_plot_df, './resources/predictions/plot_me_' + prediction_filename)
 
 		continue_execution = prompt_confirm("Do you want to continue", qmark='?')
 		debug_print(f'-- continue_execution: {continue_execution}')
