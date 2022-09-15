@@ -46,6 +46,9 @@ The current model is set up to analyse historic data. We would make adjustments 
 
 Further refine the machine learning model optimizing. 
 
+In the time period we are analysing there is a general upward trend of the market. We would like to add in a buffer for changes in market trends, e.g. if the model underperforms for X months, retrain. 
+
+The coding to plot the analysis charts needs to be refined. 
 
 ## Noteworthy 
 
@@ -53,7 +56,6 @@ The portfolios have varying fixed income to equity splits and are not directly c
 
 Fidelity and Betterment are comparible asset allocations.
 
-In the time period we are analysing there is a general upward trend of the market. We would like to add in a buffer for changes in market trends, e.g. if the model underperforms for X months, retrain. 
 
 
 
@@ -68,9 +70,8 @@ We recommend front loading annual contribution where cash flow allows, and other
 
 Some example output..... 
 
-![image](./images/fidelity_index_focused_models_monthly.png)
+![image](./images/betterment_overlay.png)
 
-![image](./images/fidelity_index_focused_models_ml_model_1.png)
 
 ### Betterment 
 
@@ -81,18 +82,21 @@ Some example output.....
 
 This application is built on python 3.7 with the following libraries:
 
-[pandas_datareader](https://pypi.org/project/pandas-datareader/)
+* [pandas_datareader](https://pypi.org/project/pandas-datareader/)
 
 ``` pip install pandas-datareader ```
 
-[kaleido](https://pypi.org/project/kaleido/) - for saving static chart images
+* [kaleido](https://pypi.org/project/kaleido/) - for saving static chart images
 
 ``` pip install -U kaleido ```
 
-[pandas](https://pandas.pydata.org/) - to create visual dataframes and perform financial analysis calculations
-[plotly](https://plotly.com/) - to create interactive charts
-[hvplot]() - to create interactive charts
-[pickle](https://docs.python.org/3/library/pickle.html) - to save objects and pass between notebooks
+* [pandas](https://pandas.pydata.org/) - to create visual dataframes and perform financial analysis calculations
+* [plotly](https://plotly.com/) - to create interactive charts
+* [hvplot]() - to create interactive charts
+* [pickle](https://docs.python.org/3/library/pickle.html) - to save objects and pass between notebooks
+
+
+``` pip install chart_studio```
 
 ## Usage
 
