@@ -206,7 +206,7 @@ def portfolio_return(selected_portfolio_weights):
 
     for key in selected_portfolio_weights.keys():
         # Create dataframe from CSV file
-        df = pd.read_csv(f"./data/{key}.csv")
+        df = pd.read_csv(f"./resources/data/{key}.csv")
 
         # Drop columns and set date index for concat
         df = df[['Date','Close']].set_index('Date')
