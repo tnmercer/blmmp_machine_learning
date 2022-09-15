@@ -260,10 +260,10 @@ def load_pickle(path):
 	debug_print('---- load_pickle()')
 	
 	pkl_file = open(Path(path), 'rb')
-	dataframe = pickle.load(pkl_file)
+	df = pickle.load(pkl_file)
 	pkl_file.close()
         
-	return name
+	return df
 
 # --------------------------------------------------------------------------------------------------
 
