@@ -8,15 +8,50 @@ from pandas.tseries.offsets import DateOffset, MonthEnd
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report
 from sklearn import svm
+from sklearn.ensemble import AdaBoostClassifier
 
+import tensorflow
+from tensorflow import keras
+from keras.models import Sequential
+from keras.layers import Dense
+
+# from tensorflow.keras.models import Sequential
+# from tensorflow.keras.layers import Dense
 
 from utils import *
+from prompts import *
+
 # from plot_function import *
 
 
 # ======================================================================================================================
 # Global Application Variables
 # ======================================================================================================================
+
+# ------------------------------------------------------------------------------
+ml_options = [
+	'Support Vector Machine','AdaBoost: Decision Tree','Neural Net: Sequential 3-2'
+]
+
+month_options = [
+	'1', '2', '3'
+]
+
+svm_filename_defaults = [
+	'svm_predictions_1m.pkl',
+	'svm_predictions_2m.pkl',
+	'svm_predictions_3m.pkl',
+]
+ada_filename_defaults = [
+	'ada_predictions_1m.pkl',
+	'ada_predictions_2m.pkl',
+	'ada_predictions_3m.pkl',
+]
+nn_filename_defaults = [
+	'nn_predictions_1m.pkl',
+	'nn_predictions_2m.pkl',
+	'nn_predictions_3m.pkl',
+]
 
 # ------------------------------------------------------------------------------
 portfolio_returns_pred_df_col_list = [
@@ -145,7 +180,7 @@ def prep_data_for_ML(df):
 	return df
 
 # ----------------------------------------------------------------------------------------------------------------------
-def predict_future(monthly_df, current_date=pd.Timestamp('2020-01-31')):
+def predict_future(ml_choice, monthly_df, current_date=pd.Timestamp('2020-01-31')):
 	
 	debug_print(f'---- predict_future()')
 	debug_print(f'-------- current_date: {current_date}')
@@ -200,10 +235,68 @@ def predict_future(monthly_df, current_date=pd.Timestamp('2020-01-31')):
 	X_train_scaled = X_scaler.transform(X_train)
 	X_test_scaled = X_scaler.transform(X_test)
 
-	# create our model, fit, and predict the future (next 3 months)
-	svm_model = svm.SVC()
-	svm_model = svm_model.fit(X_train_scaled, y_train)
-	y_future_prediction = svm_model.predict(X_test_scaled)
+	# generate predictions based on the machine learning model chosen
+	if ml_choice == ml_options[0]:		# Support Vector Machine
+
+		debug_print(f'-------- Support Vector Machine -- BEGIN')
+
+		# create our model, fit, and predict the future (next n_months_predict)
+		svm_model = svm.SVC()
+		svm_model = svm_model.fit(X_train_scaled, y_train)
+		y_future_prediction = svm_model.predict(X_test_scaled)
+
+		debug_print(f'-------- Support Vector Machine -- END')
+
+	elif ml_choice == ml_options[1]:	# AdaBoost: Decision Tree
+
+		debug_print(f'-------- AdaBoost: Decision Tree -- BEGIN')
+
+		# create our model, fit, and predict the future (next n_months_predict)
+		ada_model = AdaBoostClassifier()
+		ada_model = ada_model.fit(X_train_scaled, y_train)
+		y_future_prediction = ada_model.predict(X_test_scaled)
+		
+		debug_print(f'-------- AdaBoost: Decision Tree -- END')
+
+	elif ml_choice == ml_options[2]:	# Neural Net: Sequential 3-2
+
+		debug_print(f'-------- Neural Net: Sequential -- BEGIN')
+
+		# create our model, fit, and predict the future (next n_months_predict)
+
+		# Define the the number of inputs (features) to the model
+		number_input_features = 3
+		# Define the number of neurons in the output layer
+		number_output_neurons = 1
+		# Define the number of hidden nodes for the first hidden layer
+		hidden_nodes_layer1 =  (number_input_features + 1) // 2
+
+		# Create the Sequential model instance
+		nn = Sequential()
+		# Add the first hidden layer
+		nn.add(Dense(units=hidden_nodes_layer1, input_dim=number_input_features, activation='relu'))
+		# Add the output layer to the model specifying the number of output neurons and activation function
+		nn.add(Dense(units=number_output_neurons, activation='linear'))
+		# Display the Sequential model summary
+		debug_print(f'-------- Neural Net: Summary\n{nn.summary()}')
+
+		# create our model, fit, and predict the future (next n_months_predict)
+		nn.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+		# Fit the model using 20 epochs and the training data
+		fit_model = nn.fit(X_train_scaled, y_train, epochs=50)
+		# Evaluate the model loss and accuracy metrics using the evaluate method and the test data
+		model_loss, model_accuracy = nn.evaluate(X_test_scaled, y_test, verbose=2)
+
+		# Display the model loss and accuracy results
+		debug_print(f"-------- Neural Net: Loss: {model_loss}, Accuracy: {model_accuracy}")
+
+		y_future_prediction = (nn.predict(X_test_scaled)).astype("int32")
+
+		debug_print(f'-------- Neural Net: Sequential -- END')
+
+	else:
+		debug_print(f'-------- NO MACHINE LEARNING MODEL SELECTED ----')
+		debug_print(f'--------     HOW DID WE EVEN GET HERE??     ----')
 
 	debug_print(f'-------- y_future_prediction: {y_future_prediction}')
 
@@ -212,19 +305,26 @@ def predict_future(monthly_df, current_date=pd.Timestamp('2020-01-31')):
 # ----------------------------------------------------------------------------------------------------------------------
 # this function takes the y_future_predictions and calculates months_to_invest
 # returns months_to_invest
-def calculate_investment_from_prediction(y_future_prediction):
-	
-	debug_print(f'---- calculate_investment_from_prediction()')
-	debug_print(f'-------- y_future_prediction: {y_future_prediction}')
+def calculate_investment_from_prediction(month_choice, y_future_prediction):
 	
 	# determine how many months to invest
+	debug_print(f'---- calculate_investment_from_prediction()')
+	debug_print(f'-------- month_choice       : {month_choice}')
+	debug_print(f'-------- y_future_prediction: {y_future_prediction}')
+	
+	# initialize our investment allocation
 	months_to_invest = 0
 	
-	# for each prediction, add a month's worth of investing 
+	# calculate our investment allocation based on the ML predictions
 	for prediction in y_future_prediction:
 		if prediction > 0:
+			# for each positive return predicted, increase our investment allocation
 			months_to_invest += 1
+			# break when we've reached our chosen number of months to predict
+			if months_to_invest >= month_choice:
+				break
 		else:
+			# break at our first negative prediction
 			break
 	
 	debug_print(f'-------- months_to_invest: {months_to_invest}')
@@ -233,14 +333,15 @@ def calculate_investment_from_prediction(y_future_prediction):
 
 # ----------------------------------------------------------------------------------------------------------------------
 # save our future predictions so we can graph them later
-def save_monthly_predictions(current_date, current_close, current_return, current_target, y_future_prediction):
+def save_monthly_predictions(current_date, current_close, current_return, current_target, y_future_prediction, months_to_invest):
 	
 	debug_print(f'---- save_monthly_predictions()')
-	debug_print(f'-------- current_date: {current_date}')
-	debug_print(f'-------- current_close: {current_close}')
-	debug_print(f'-------- current_return: {current_return}')
-	debug_print(f'-------- current_target: {current_target}')
-	debug_print(f'-------- y_future_prediction: {y_future_prediction}')
+	debug_print(f'-------- current_date -------: {current_date}')
+	debug_print(f'-------- current_close ------: {current_close}')
+	debug_print(f'-------- current_return -----: {current_return}')
+	debug_print(f'-------- current_target -----: {current_target}')
+	debug_print(f'-------- y_future_prediction : {y_future_prediction}')
+	debug_print(f'-------- months_to_invest -- : {months_to_invest}')
 	
 	# ----------------------------------------------------------------------------------------------
 	# save the data Toni needs to calculate the portfolio returns
@@ -250,7 +351,7 @@ def save_monthly_predictions(current_date, current_close, current_return, curren
 		'Date':[current_date],
 		'Close':[current_close],
 		'Return':[current_return],
-		'Months_To_Invest':[calculate_investment_from_prediction(y_future_prediction)],
+		'Months_To_Invest':[months_to_invest],
 	}
 	new_portfolio_return_df = pd.DataFrame.from_dict(new_portfolio_return)
 	new_portfolio_return_df.set_index('Date', inplace=True)
@@ -326,94 +427,145 @@ def main():
 	debug_print('---- main() -----------------------------------------------------------------------------------------')
 	debug_print('-----------------------------------------------------------------------------------------------------')
 	
-	# load the VTI total market ETF and resample the daily data to monthly
-	total_market_df = resample_dataframe(load_csv('VTI'))
-	debug_print('-- loaded & resampled VTI.csv')
-	
-	# prep VTI for Machine Learning
-	total_market_df = prep_data_for_ML(total_market_df)
-	debug_print('-- prepped VTI for ML')
+	continue_execution = True
 
-	# save current_date (to remember where we are in time)
-	# save current_date_idx = 12
-	# make current_date = total_market_df.index[12]
-
-	# we need the last_investment_date so we know how many months to invest
-	# this needs to be moved into Toni's code
-	global last_investment_date
-	last_investment_date = None
-
-	debug_print('-----------------------------------------------------------------------------------------------------')
-	debug_print('-- calculating our future predictions ---------------------------------------------------------------')
-	debug_print('-----------------------------------------------------------------------------------------------------')
-	
-	# skip some months at the beginning so we have enough training data
-	months_to_skip = 12
-	debug_print(f'-- months_to_skip: {months_to_skip}')
-	# run for this many months total
-	# months_to_run  = int(((total_market_df.index.max() - total_market_df.index.min()) / np.timedelta64(1,'M')) / 2)
-	# ^^^ this calculates half the time
-	months_to_run  = int(((total_market_df.index.max() - total_market_df.index.min()) / np.timedelta64(1,'M'))) + 1
-	# ^^^ this runs for basically the whole time
-	debug_print(f'-- months_to_run:  {months_to_run}')
-
-	# for each month, calculate our future predictions and invest if appropriate
-	for current_date in total_market_df.index:
+	while continue_execution:
 		
-		debug_print('-----------------------------------------------------------------------------------------------------')
-		debug_print(f'-- current date: {current_date}')
-		
-		# skip the first 12 months
-		if current_date < total_market_df.index[months_to_skip]:
-			debug_print('-- skipped')
-			continue
-		
-		# ----------------------------------------------------------------------
-		# stop running after N months for test purposes
-		# calculate total 
-		if current_date > total_market_df.index[months_to_run]:
-			debug_print('-- stopped')
-			break
-		# ----------------------------------------------------------------------
+		'''
+		1. display the welcome message
+		2. ask the user which machine learning model to use
+		3. ask the user how many months to predict
+		4. ask the user to specify the filename to save the portfolio_predictions for later use
+		5. ask the user if they want to continue
+		'''
 
-		# get our future predictions
-		y_future_prediction = predict_future(total_market_df, current_date)
-		debug_print('-- future predicted')
+		# print a welcome message for the user
+		welcome_message()
 
-		# save our current months predictions for later plotting
-		# NOTE: save_monthly_predictions function is INCOMPLETE, see above
-		save_monthly_predictions(
-			current_date,
-			total_market_df.loc[current_date]['Close'],
-			total_market_df.loc[current_date]['Current Return'],
-			total_market_df.loc[current_date]['Current Target'],
-			y_future_prediction
+		# get the user's stock choice
+		ml_choice = prompt_multiple_choice(
+			"Please select the Machine Learning model you wish to use:",
+			ml_options
 		)
-		debug_print('-- predictions saved')
+		debug_print(f'-- Your ML choice was: {ml_choice}')
+
+		month_choice = int(prompt_multiple_choice(
+			"Please select the number of months to predict:",
+			month_options
+		))
+		debug_print(f'-- Your months to predict was: {month_choice}')
+
+		debug_print('-----------------------------------------------------------------------------------------------------')
+		debug_print('-----------------------------------------------------------------------------------------------------')	
+
+		# load the VTI total market ETF and resample the daily data to monthly
+		total_market_df = resample_dataframe(load_csv('VTI'))
+		debug_print('-- loaded & resampled VTI.csv')
+		
+		# prep VTI for Machine Learning
+		total_market_df = prep_data_for_ML(total_market_df)
+		debug_print('-- prepped VTI for ML')
+
+		debug_print('-----------------------------------------------------------------------------------------------------')
+		debug_print('-- calculating our future predictions ---------------------------------------------------------------')
+		debug_print('-----------------------------------------------------------------------------------------------------')
+	
+		# skip some months at the beginning so we have enough training data
+		months_to_skip = 12
+		debug_print(f'-- months_to_skip: {months_to_skip}')
+		# run for this many months total
+		# months_to_run  = int(((total_market_df.index.max() - total_market_df.index.min()) / np.timedelta64(1,'M')) / 2)
+		# ^^^ this calculates half the time
+		months_to_run  = int(((total_market_df.index.max() - total_market_df.index.min()) / np.timedelta64(1,'M'))) + 1
+		# ^^^ this runs for basically the whole time
+		debug_print(f'-- months_to_run:  {months_to_run}')
+
+		# notify the user it's time to start calculating the portfolio predictions
+		prompt_confirm('Ready to calculate future predictions. Press [ENTER] to continue')
+
+		# for each month, calculate our future predictions and invest if appropriate
+		for current_date in total_market_df.index:
+
+			debug_print('-----------------------------------------------------------------------------------------------------')
+			debug_print(f'-- current date: {current_date}')
+
+			# skip the first 12 months
+			if current_date < total_market_df.index[months_to_skip]:
+				debug_print('-- skipped')
+				continue
+
+			# ----------------------------------------------------------------------
+			# stop running after N months for test purposes
+			# calculate total 
+			if current_date > total_market_df.index[months_to_run]:
+				debug_print('-- stopped')
+				break
+			# ----------------------------------------------------------------------
+
+			# get our future predictions
+			y_future_prediction = predict_future(ml_choice, total_market_df, current_date)
+			debug_print('-- future predicted')
+			
+			months_to_invest = calculate_investment_from_prediction(month_choice, y_future_prediction)
+
+			# save our current months predictions for later plotting
+			# NOTE: save_monthly_predictions function is INCOMPLETE, see above
+			save_monthly_predictions(
+				current_date,
+				total_market_df.loc[current_date]['Close'],
+				total_market_df.loc[current_date]['Current Return'],
+				total_market_df.loc[current_date]['Current Target'],
+				y_future_prediction,
+				months_to_invest
+			)
+			debug_print('-- predictions saved')
+			debug_print('-----------------------------------------------------------------------------------------------------')
+
+			# FUTURE re-work Toni's code to update the portfolio on a monthly basis
+			# update_portfolio(current_date, this_months_return, months_to_invest)
+			#  this function should...
+			#   - update the portfolio returns each month
+			#   - invest-and-rebalance at the same time if months_to_invest is positive
+
+		debug_print('-----------------------------------------------------------------------------------------------------')
+		debug_print('-- calculated all future predictions ---')
 		debug_print('-----------------------------------------------------------------------------------------------------')
 
-		# FUTURE re-work Toni's code to update the portfolio on a monthly basis
-		# update_portfolio(current_date, this_months_return, months_to_invest)
-		#  this function should...
-		#   - update the portfolio returns each month
-		#   - invest-and-rebalance at the same time if months_to_invest is positive
-	
-	debug_print('-----------------------------------------------------------------------------------------------------')
-	debug_print('-- calculated all future predictions ---')
-	debug_print('-----------------------------------------------------------------------------------------------------')
+		# notify the user the portfolio prediction calculates are complete
+		prompt_confirm('All future predictions are calculated. Press [ENTER] to continue')
 
-	global portfolio_returns_pred_df
-	debug_print('-- save [portfolio_returns_pred_df] to pickle -------------------------------------------------------')
-	debug_print(portfolio_returns_pred_df)
-	save_pickle(portfolio_returns_pred_df, './Resources/portfolio_returns_pred_df.pkl')
+		# get the default filename based on the ml_choice and month_choice
+		default_filename = 'file.pkl'
+		if ml_choice == ml_options[0]:		# Support Vector Machine
+			default_filename = svm_filename_defaults[month_choice-1]
+		elif ml_choice == ml_options[1]:	# AdaBoost: Decision Tree
+			default_filename = ada_filename_defaults[month_choice-1]
+		elif ml_choice == ml_options[2]:	# Neural Net: Sequential 3-2
+			default_filename = nn_filename_defaults[month_choice-1]
+		debug_print(f'-- default_filename: {default_filename}')
 
-	global predictions_to_plot_df
-	debug_print('-- save [predictions_to_plot_df] to pickle ----------------------------------------------------------')
-	debug_print(predictions_to_plot_df)
-	save_pickle(predictions_to_plot_df, './Resources/predictions_to_plot_df.pkl')
-	
-	# then Dan and Toni can use this with your respective code
-	
+		# prompt the user to enter the filepath in which to save the portfolio predictions
+		prediction_filename = prompt_file_path(
+			"Please specify the filename of your portfolio predictions:",
+			default=default_filename
+		)
+		debug_print(f'-- The filename entered was: {prediction_filename}')
+
+		# save our portfolio predictions
+		global portfolio_returns_pred_df
+		debug_print('-- save [portfolio_returns_pred_df] to pickle -------------------------------------------------------')
+		debug_print(portfolio_returns_pred_df)
+		save_pickle(portfolio_returns_pred_df, './predictions/portfolio_' + prediction_filename)
+
+		# plot our predictions
+		global predictions_to_plot_df
+		debug_print('-- save [predictions_to_plot_df] to pickle ----------------------------------------------------------')
+		debug_print(predictions_to_plot_df)
+		save_pickle(predictions_to_plot_df, './predictions/plot_me_' + prediction_filename)
+
+		continue_execution = prompt_confirm("Do you want to continue", qmark='?')
+		debug_print(f'-- continue_execution: {continue_execution}')
+		
 	return None
 
 
