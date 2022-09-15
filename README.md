@@ -1,4 +1,4 @@
-# To Time or Not to Time: That's the Retirement Questions
+# To Time or Not to Time: That's the Retirement Question
 
 ## Summary
 
@@ -20,17 +20,22 @@ To find a portfolio to conduct our analysis, we began by looking through portfol
 
 We decided to use portfolio 1 as an indicator of the general market movements as it's 100% equity. This is the fund we used to train our models. 
 
-### The Models
+### The Machine Learning Models
 
-Our model is set up to predict the movement of the market for the 3 months following. 
+Our model predicts the movement of the market 3 months into the future. The model returns an instruction to contribute for the number of consecutive positive months, i.e. if the model predicts the following month will go down, it waits to invest at a lower point.   
 
-We selected the SVM model because... 
+We selected the SVM model because   
 
-We selected the ADABoost model because... 
+We added a Neural Network
 
-### The investment strategy 
+We selected the ADABoost model as a model that we had not yet tested.
+
+
+
+### The contribution strategies
 
 The output of the machine learning model is an instruction to contribute a number of months to the investment account (between 0 and 3). 
+
 
 ### Conclusion 
 
@@ -39,33 +44,29 @@ The output of the machine learning model is an instruction to contribute a numbe
 
 The current model is set up to analyse historic data. We would make adjustments to feed in current data to execute. 
 
-Further refine the machine learning model. 
+Further refine the machine learning model optimizing. 
 
 
 ## Noteworthy 
 
 The portfolios have varying fixed income to equity splits and are not directly comparible against one another. 
 
-Fidelity and Betterment are comparible.
+Fidelity and Betterment are comparible asset allocations.
 
-## Installations
-
-[pandas_datareader](https://pypi.org/project/pandas-datareader/)
+In the time period we are analysing there is a general upward trend of the market. We would like to add in a buffer for changes in market trends, e.g. if the model underperforms for X months, retrain. 
 
 
-``` pip install pandas-datareader ```
-
-[kaleido](https://pypi.org/project/kaleido/) - for saving static chart images
 
 
-``` pip install -U kaleido ```
+## Conclusion
 
-## Outcomes
+Overall the best investment strategy was to front load the contributions for the entire year. 
 
-#### Fidelity
+Between the monthly dollar cost averaging and the machine learning model, the model created better overall outcomes. 
 
-![image](./images/fidelity_index_focused_models_annual.png)
+We recommend front loading annual contribution where cash flow allows, and otherwise using the SPECIFY WHICH MODEL PERFORMED BEST model to decide when to invest.
 
+Some example output..... 
 
 ![image](./images/fidelity_index_focused_models_monthly.png)
 
@@ -76,6 +77,41 @@ Fidelity and Betterment are comparible.
 
 ### Rick Ferris Core 4
 
+## Installations
+
+This application is built on python 3.7 with the following libraries:
+
+[pandas_datareader](https://pypi.org/project/pandas-datareader/)
+
+``` pip install pandas-datareader ```
+
+[kaleido](https://pypi.org/project/kaleido/) - for saving static chart images
+
+``` pip install -U kaleido ```
+
+[pandas](https://pandas.pydata.org/) - to create visual dataframes and perform financial analysis calculations
+[plotly](https://plotly.com/) - to create interactive charts
+[hvplot]() - to create interactive charts
+[pickle](https://docs.python.org/3/library/pickle.html) - to save objects and pass between notebooks
+
+## Usage
+
+To use this application, clone the git hub repository. 
+
+* From your chosen Terminal run the application.py file using the instruction ``` python application.py ```.
+
+* Choose an investment portfolio 
+
+* Choose a machine learning model to run 
+
+* Specify file path for saving data
+
+In Jupyter Notebook, open portfolio returns and set the timing and portfolio parameters. 
+
+Running this notebook, creates charts illustrating the investment balance over time. 
+
+TO DO - ADD IN OTHER ML MODELS 
+ADJUST CODE TO 
 
 
 ## Requirements
