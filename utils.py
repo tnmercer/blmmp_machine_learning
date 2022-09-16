@@ -1,12 +1,15 @@
 import datetime as dt
-import pandas as pd
-import pandas_datareader as pdr
-from pandas.tseries.offsets import BDay
 from datetime import date
+import pandas as pd
+from pandas.tseries.offsets import BDay
 from pathlib import Path
-import pickle
+import pandas_datareader as pdr
+import hvplot.pandas
+import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 import numpy as np
+import pickle
+
 
 
 from config import *
@@ -76,7 +79,7 @@ def download_stock_data(
 
 
 # --------------------------------------------------------------------------------------------------
-def save_data(df, dir='data', filename='file.csv'):
+def save_data(df, dir='resources/data', filename='file.csv'):
 	"""load_stock_data() TODO: a summary of what this function does 
 	
 	TODO: add a detailed description if necessary
@@ -136,7 +139,7 @@ def load_data(ticker):
 	debug_print('---- load_data()')
 	
 	# generate a path for the ticker data we want to load
-	path = Path('data/'+ticker+'.csv')
+	path = Path('resources/data/'+ticker+'.csv')
 	
 	# check for the existence of that file
 	if not path.is_file():
