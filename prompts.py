@@ -6,7 +6,7 @@ def welcome_message():
 	print()
 	print('Welcome to MMP: Retirement Prediction')
 	print()
-	print("This Monthly Money Planner application helps you plan your retirement portoflio investment strategy. This application lets you choose one of three machine learning models for prediction . Results are displayed in an interactive graph that you man inspect. Enjoy!")
+	print("This Monthly Money Planner application helps you plan your retirement portoflio investment strategy. Choose a machine learning model, and the number of predictions to make. You'll be asked to save your results, which can be graphed using the portfolio_returns.ipynb Jupyter Notebook. Enjoy!")
 	print()
 
 	return None
