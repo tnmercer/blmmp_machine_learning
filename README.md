@@ -30,22 +30,6 @@ We selected the [AdaBoost](https://scikit-learn.org/stable/modules/generated/skl
 
 The models predicts the movement of the market 1, 2 or 3 months into the future and returns an instruction to contribute for the number of consecutive positive months, i.e. if the model predicts the following month will go down, it waits to invest at a lower point.   
 
-### Conclusion 
-
-
-
-### Future Dev 
-
-The current model is set up to analyse historic data. We would make adjustments to feed in current data for live execution. 
-
-Further refine the machine learning model optimizing. 
-
-In the time period we are analysing there is a general upward trend of the market. We would like to add in a buffer for changes in market trends, e.g. if the model underperforms for X months, retrain. 
-
-Adjust the output to provide a recommended contribution strategy for each portfolio. 
-
-Adjust the code to loop through all models and portfolios for efficiency.
-
 ## Noteworthy 
 
 The portfolios have varying fixed income to equity splits and are not directly comparible against one another. 
@@ -60,9 +44,26 @@ Between the monthly dollar cost averaging and the machine learning model, the mo
 
 We recommend front loading annual contribution where cash flow allows, and otherwise using the SPECIFY WHICH MODEL PERFORMED BEST model to decide when to invest.
 
-Some example output..... 
+![image](./resources/images/betterment_overlay.png)
 
-![image](./images/betterment_overlay.png)
+![image](./resources/images/Core4_overlay.png)
+
+![image](./resources/images/Fidelity_overlay.png)
+
+![image](./resources/images/VTI_overlay.png)
+
+
+### Future Dev 
+
+The current model is set up to analyse historic data. We would make adjustments to feed in current data for live execution. 
+
+Further refine the machine learning model optimizing. 
+
+In the time period we are analysing there is a general upward trend of the market. We would like to add in a buffer for changes in market trends, e.g. if the model underperforms for X months, retrain. 
+
+Adjust the output to provide a recommended contribution strategy for each portfolio. 
+
+Adjust the code to loop through all models and portfolios for efficiency.
 
 ## Installations
 
