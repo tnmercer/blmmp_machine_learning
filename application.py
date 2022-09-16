@@ -1,4 +1,9 @@
+# application.py
+
+# ======================================================================================================================
 # Imports
+# ======================================================================================================================
+
 import pandas as pd
 import numpy as np
 from pathlib import Path
@@ -21,7 +26,7 @@ from keras.layers import Dense
 from utils import *
 from prompts import *
 
-# from plot_function import *
+
 
 
 # ======================================================================================================================
@@ -30,13 +35,16 @@ from prompts import *
 
 # ------------------------------------------------------------------------------
 ml_options = [
-	'Support Vector Machine','AdaBoost: Decision Tree','Neural Net: Sequential 3-2'
+	'Support Vector Machine',
+	'AdaBoost: Decision Tree',
+	# 'Neural Net: Sequential 3-2'
 ]
 
 month_options = [
 	'1', '2', '3'
 ]
 
+# ------------------------------------------------------------------------------
 svm_filename_defaults = [
 	'svm_predictions_1m.pkl',
 	'svm_predictions_2m.pkl',
@@ -84,16 +92,15 @@ monthly_predictions_col_list = [
 	'Close',
 ]
 
-global monthly_predictions_plot_list
-monthly_predictions_plot_list = []
+global monthly_predictions_list
+monthly_predictions_list = []
+
 
 
 
 # ======================================================================================================================
 # Core Application Functions
 # ======================================================================================================================
-
-
 
 # ----------------------------------------------------------------------------------------------------------------------
 # this function loads the price data for a particular ticker
@@ -285,7 +292,7 @@ def predict_future(ml_choice, monthly_df, current_date=pd.Timestamp('2020-01-31'
 		# Fit the model using 20 epochs and the training data
 		fit_model = nn.fit(X_train_scaled, y_train, epochs=50)
 		# Evaluate the model loss and accuracy metrics using the evaluate method and the test data
-		model_loss, model_accuracy = nn.evaluate(X_test_scaled, y_test, verbose=2)
+		# model_loss, model_accuracy = nn.evaluate(X_test_scaled, y_test, verbose=2)
 
 		# Display the model loss and accuracy results
 		debug_print(f"-------- Neural Net: Loss: {model_loss}, Accuracy: {model_accuracy}")
@@ -365,12 +372,9 @@ def save_monthly_predictions(current_date, current_close, current_return, curren
 	debug_print('-------- portfolio_returns_pred_df')
 	debug_print(portfolio_returns_pred_df.tail(5))
 	
-	
 	# ----------------------------------------------------------------------------------------------
 	# save the predictions we need to plot
 	# ----------------------------------------------------------------------------------------------
-	
-	# columns = 'Date', 'Current Return', 'Future Returns',
 	
 	new_predictions = {
 		'Date'          : [current_date],
@@ -389,46 +393,70 @@ def save_monthly_predictions(current_date, current_close, current_return, curren
 	debug_print('-------- predictions_to_plot_df')
 	debug_print(predictions_to_plot_df.tail(5))
 	
-	
 	# ----------------------------------------------------------------------------------------------
 	# TODO: a more complicated way to plot our predictions
 	# ----------------------------------------------------------------------------------------------
 	
-	# columns = 'Date', 'Close'
-	
-	# monthly_predictions_col_list
-	
+	# global monthly_predictions_col_list
+	# global monthly_predictions_list
+
 	# # create a datafrom to hold this months predictions
 	# new_predictions_df = pd.DataFrame(columns=monthly_predictions_col_list)
 	
 	# new_predictions_df.Date[0] =current_date
 	# new_predictions_df.Close[0]=current_close
 	
-	# new_predictions_df.Date[1] =current_date + DateOffset(1)
+	# new_predictions_df.Date[1] =current_date + MonthEnd(1)
 	# new_predictions_df.Close[1]=abs(current_return) * y_future_prediction[0] + new_predictions_df.Close[0]
 	
-	# new_predictions_df.Date[2] =current_date + DateOffset(2)
+	# new_predictions_df.Date[2] =current_date + MonthEnd(2)
 	# new_predictions_df.Close[2]=abs(current_return) * y_future_prediction[1] + new_predictions_df.Close[1]
 	
-	# new_predictions_df.Date[3] =current_date + DateOffset(3)
+	# new_predictions_df.Date[3] =current_date + MonthEnd(3)
 	# new_predictions_df.Close[3]=abs(current_return) * y_future_prediction[2] + new_predictions_df.Close[2]
 	
-	# monthly_predictions_plot_list.append(new_predictions_df)
-	
-	# print the last 5 monthly predictions
-	# debug_print(monthly_predictions_plot_list[len(monthly_predictions_plot_list)-5:])
-	
+	# monthly_predictions_list.append(new_predictions_df)
+
+	# # print the last 5 monthly predictions
+	# debug_print(monthly_predictions_list[len(monthly_predictions_list)-3:])
 	
 	return None
 
 # ----------------------------------------------------------------------------------------------------------------------
+# TODO: how we plot and save each set of predictions over time
+# ----------------------------------------------------------------------------------------------------------------------
+def plot_save_predictions(file_path, output_path):
+
+	debug_print('---- plot_save_predictions()')
+
+	# some print statements to aid in debugging
+	debug_print(f'---- plot_save_predictions() -----------------------------------------------------------------------------------------')
+	debug_print(f'-------- file_path --: {file_path}')
+	debug_print(f'-------- output_path : {output_path}')
+
+	# global monthly_predictions_list
+	
+	# monthly_prediction_plots = []
+
+	# for prediction_df in monthly_predictions_list:
+	# 	# hello
+	
+	# df = load_pickle(file_path)
+	# fig = df.cumsum().plot()
+	# save_image(fig, output_path)
+
+	return None
+
+# ----------------------------------------------------------------------------------------------------------------------
 def main():
+
 	debug_print('-----------------------------------------------------------------------------------------------------')
 	debug_print('---- main() -----------------------------------------------------------------------------------------')
 	debug_print('-----------------------------------------------------------------------------------------------------')
 	
 	continue_execution = True
 
+	# ----------------------------------------------------------------------------------------------
 	while continue_execution:
 		
 		'''
@@ -458,6 +486,7 @@ def main():
 		debug_print('-----------------------------------------------------------------------------------------------------')
 		debug_print('-----------------------------------------------------------------------------------------------------')	
 
+		# ----------------------------------------------------------------------------------------------
 		# load the VTI total market ETF and resample the daily data to monthly
 		total_market_df = resample_dataframe(load_csv('VTI'))
 		debug_print('-- loaded & resampled VTI.csv')
@@ -470,6 +499,7 @@ def main():
 		debug_print('-- calculating our future predictions ---------------------------------------------------------------')
 		debug_print('-----------------------------------------------------------------------------------------------------')
 	
+		# ----------------------------------------------------------------------------------------------
 		# skip some months at the beginning so we have enough training data
 		months_to_skip = 12
 		debug_print(f'-- months_to_skip: {months_to_skip}')
@@ -483,6 +513,7 @@ def main():
 		# notify the user it's time to start calculating the portfolio predictions
 		prompt_confirm('Ready to calculate future predictions. Press [ENTER] to continue')
 
+		# ----------------------------------------------------------------------------------------------
 		# for each month, calculate our future predictions and invest if appropriate
 		for current_date in total_market_df.index:
 
@@ -508,8 +539,8 @@ def main():
 			
 			months_to_invest = calculate_investment_from_prediction(month_choice, y_future_prediction)
 
+			# ----------------------------------------------------------------------------------------------
 			# save our current months predictions for later plotting
-			# NOTE: save_monthly_predictions function is INCOMPLETE, see above
 			save_monthly_predictions(
 				current_date,
 				total_market_df.loc[current_date]['Close'],
@@ -521,7 +552,7 @@ def main():
 			debug_print('-- predictions saved')
 			debug_print('-----------------------------------------------------------------------------------------------------')
 
-			# FUTURE re-work Toni's code to update the portfolio on a monthly basis
+			# NOTE: in teh future we can re-work Toni's code to update the portfolio on a monthly basis with a function like...
 			# update_portfolio(current_date, this_months_return, months_to_invest)
 			#  this function should...
 			#   - update the portfolio returns each month
@@ -534,6 +565,7 @@ def main():
 		# notify the user the portfolio prediction calculates are complete
 		prompt_confirm('All future predictions are calculated. Press [ENTER] to continue')
 
+		# ----------------------------------------------------------------------------------------------
 		# get the default filename based on the ml_choice and month_choice
 		default_filename = 'file.pkl'
 		if ml_choice == ml_options[0]:		# Support Vector Machine
@@ -544,6 +576,7 @@ def main():
 			default_filename = nn_filename_defaults[month_choice-1]
 		debug_print(f'-- default_filename: {default_filename}')
 
+		# ----------------------------------------------------------------------------------------------
 		# prompt the user to enter the filepath in which to save the portfolio predictions
 		prediction_filename = prompt_file_path(
 			"Please specify the filename of your portfolio predictions:",
@@ -551,18 +584,32 @@ def main():
 		)
 		debug_print(f'-- The filename entered was: {prediction_filename}')
 
+		# ----------------------------------------------------------------------------------------------
 		# save our portfolio predictions
 		global portfolio_returns_pred_df
 		debug_print('-- save [portfolio_returns_pred_df] to pickle -------------------------------------------------------')
 		debug_print(portfolio_returns_pred_df)
 		save_pickle(portfolio_returns_pred_df, './resources/predictions/portfolio_' + prediction_filename)
 
+		# ----------------------------------------------------------------------------------------------
 		# plot our predictions
 		global predictions_to_plot_df
 		debug_print('-- save [predictions_to_plot_df] to pickle ----------------------------------------------------------')
 		debug_print(predictions_to_plot_df)
 		save_pickle(predictions_to_plot_df, './resources/predictions/plot_me_' + prediction_filename)
+		
+		plot_predictions_file = './resources/predictions/plot_' + prediction_filename
+		output_path = './resources/images/plot_of_' + prediction_filename
+		plot_save_predictions(plot_predictions_file, output_path)
 
+		# # ----------------------------------------------------------------------------------------------
+		# # plot our predictions a different way
+		# debug_print(monthly_predictions_list[len(monthly_predictions_list)-5:])
+		global monthly_predictions_list
+		save_pickle(monthly_predictions_list, './resources/predictions/plot_me_' + prediction_filename)
+
+
+		# ----------------------------------------------------------------------------------------------
 		continue_execution = prompt_confirm("Do you want to continue", qmark='?')
 		debug_print(f'-- continue_execution: {continue_execution}')
 		
