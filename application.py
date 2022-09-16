@@ -285,7 +285,7 @@ def predict_future(ml_choice, monthly_df, current_date=pd.Timestamp('2020-01-31'
 		# Add the output layer to the model specifying the number of output neurons and activation function
 		nn.add(Dense(units=number_output_neurons, activation='linear'))
 		# Display the Sequential model summary
-		debug_print(f'-------- Neural Net: Summary\n{nn.summary()}')
+		# debug_print(f'-------- Neural Net: Summary\n{nn.summary()}')
 
 		# create our model, fit, and predict the future (next n_months_predict)
 		nn.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
@@ -295,7 +295,7 @@ def predict_future(ml_choice, monthly_df, current_date=pd.Timestamp('2020-01-31'
 		# model_loss, model_accuracy = nn.evaluate(X_test_scaled, y_test, verbose=2)
 
 		# Display the model loss and accuracy results
-		debug_print(f"-------- Neural Net: Loss: {model_loss}, Accuracy: {model_accuracy}")
+		# debug_print(f"-------- Neural Net: Loss: {model_loss}, Accuracy: {model_accuracy}")
 
 		y_future_prediction = (nn.predict(X_test_scaled)).astype("int32")
 
